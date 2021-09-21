@@ -1,8 +1,8 @@
-FROM buildpack-deps:stretch-curl
-MAINTAINER Manfred Touron <m@42.am> (https://github.com/moul)
+FROM buildpack-deps:bullseye-curl
+LABEL maintainer="Nightah"
 
 # Install deps
-RUN set -x; echo "Starting image build for Debian Stretch" \
+RUN set -x; echo "Starting image build for Debian Bullseye" \
  && dpkg --add-architecture arm64                      \
  && dpkg --add-architecture armel                      \
  && dpkg --add-architecture armhf                      \
@@ -48,17 +48,12 @@ RUN set -x; echo "Starting image build for Debian Stretch" \
         openssl                                        \
         libssl-dev                                     \
  && apt-get clean
-# FIXME: install gcc-multilib
-# FIXME: add mips and powerpc architectures
-
 
 # Install Windows cross-tools
 RUN apt-get install -y mingw-w64 \
  && apt-get clean
 
-
 # Install OSx cross-tools
-
 #Build arguments
 ARG osxcross_repo="tpoechtrager/osxcross"
 ARG osxcross_revision="542acc2ef6c21aeb3f109c03748b1015a71fed63"
@@ -91,7 +86,6 @@ RUN mkdir -p "/tmp/osxcross"                                                    
  && sed -i -e "s%exec cmake%exec /usr/bin/cmake%" /usr/osxcross/bin/osxcross-cmake                             \
  && rm -rf /tmp/osxcross                                                                                       \
  && rm -rf "/usr/osxcross/SDK/MacOSX${DARWIN_SDK_VERSION}.sdk/usr/share/man"
-
 
 # Create symlinks for triples and set default CROSS_TRIPLE
 ENV LINUX_TRIPLES=arm-linux-gnueabi,arm-linux-gnueabihf,aarch64-linux-gnu,mipsel-linux-gnu,powerpc64le-linux-gnu                  \
@@ -135,6 +129,21 @@ RUN mkdir -p /usr/x86_64-linux-gnu;                                             
 # with more and more parameters
 
 ENV LD_LIBRARY_PATH /usr/osxcross/lib:$LD_LIBRARY_PATH
+
+ARG GO_VERSION="1.17.1"
+
+ENV GOROOT="/usr/local/go" \
+    PATH="/root/go/bin:/usr/local/go/bin:$PATH" \
+    CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    CGO_LDFLAGS="-Wl,-z,relro,-z,now"
+
+# Install Golang and gox
+RUN cd /tmp; \
+    wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz; \
+    tar -xvf go${GO_VERSION}.linux-amd64.tar.gz; \
+    mv go /usr/local/; \
+    go install github.com/authelia/gox@latest; \
+    rm -rf /tmp/*
 
 # Image metadata
 ENTRYPOINT ["/usr/bin/crossbuild"]
