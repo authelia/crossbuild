@@ -1,100 +1,107 @@
 FROM buildpack-deps:bullseye-curl
 LABEL maintainer="Nightah"
 
+ENV CROSS_TRIPLE="x86_64-linux-gnu" \
+    PATH="/root/go/bin:/usr/local/go/bin:$PATH" \
+    GOROOT="/usr/local/go" \
+    CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
+    CGO_LDFLAGS="-Wl,-z,relro,-z,now"
+
 # Install deps
 RUN set -x; echo "Starting image build for Debian Bullseye" \
  && dpkg --add-architecture arm64                      \
- && dpkg --add-architecture armel                      \
  && dpkg --add-architecture armhf                      \
- && dpkg --add-architecture i386                       \
- && dpkg --add-architecture mips                       \
- && dpkg --add-architecture mipsel                     \
- && dpkg --add-architecture powerpc                    \
- && dpkg --add-architecture ppc64el                    \
  && apt-get update                                     \
  && apt-get install -y -q                              \
         autoconf                                       \
         automake                                       \
         autotools-dev                                  \
-        bc                                             \
-        binfmt-support                                 \
         binutils-multiarch                             \
         binutils-multiarch-dev                         \
         build-essential                                \
         ccache                                         \
-        clang                                          \
         crossbuild-essential-arm64                     \
-        crossbuild-essential-armel                     \
         crossbuild-essential-armhf                     \
-        crossbuild-essential-mipsel                    \
-        crossbuild-essential-ppc64el                   \
         curl                                           \
-        devscripts                                     \
-        gdb                                            \
         git-core                                       \
-        libtool                                        \
-        llvm                                           \
-        mercurial                                      \
         multistrap                                     \
-        patch                                          \
-        software-properties-common                     \
-        subversion                                     \
         wget                                           \
         xz-utils                                       \
-        cmake                                          \
-        qemu-user-static                               \
         libxml2-dev                                    \
         lzma-dev                                       \
         openssl                                        \
         libssl-dev                                     \
  && apt-get clean
 
-# Install Windows cross-tools
-RUN apt-get install -y mingw-w64 \
- && apt-get clean
+ARG FREEBSD_VERSION="13.0"
+# Install FreeBSD cross-tools
+# Compile binutils
+RUN cd /tmp && \
+  wget https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.gz && \
+  tar xf binutils-2.37.tar.gz && \
+  cd binutils-2.37 && \
+  ./configure --enable-libssp --enable-gold --enable-ld \
+  --target=x86_64-pc-freebsd13 --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin && \
+  make -j4 && \
+  make install && \
+  cd /tmp && rm -rf /tmp/*
+# Get FreeBSD libs/headers
+RUN cd /tmp && \
+  wget https://mirror.aarnet.edu.au/pub/FreeBSD/releases/amd64/${FREEBSD_VERSION}-RELEASE/base.txz && \
+  cd /usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13 && \
+  tar -xf /tmp/base.txz ./lib/ ./usr/lib/ ./usr/include/ && \
+  cd /usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13/usr/lib && \
+  find . -xtype l|xargs ls -l|grep ' /lib/' \
+  | awk '{print "ln -sf /usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13"$11 " " $9}' \
+  | /bin/sh && \
+  cd /tmp && rm -rf /tmp/*
+# Compile GMP
+RUN cd /tmp && \
+  wget https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz && \
+  tar -xf gmp-6.2.1.tar.xz && \
+  cd gmp-6.2.1 && \
+  ./configure --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --enable-shared --enable-static \
+  --enable-fft --enable-cxx --host=x86_64-pc-freebsd13 && \
+  make -j4 && make install && \
+  cd /tmp && rm -rf /tmp/*
+# Compile MPFR
+RUN cd /tmp && \
+  wget https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.0.tar.xz && tar -xf mpfr-4.1.0.tar.xz && \
+  cd mpfr-4.1.0 && \
+  ./configure --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --with-gnu-ld--enable-static \
+  --enable-shared --with-gmp=/usr/x86_64-pc-freebsd13 --host=x86_64-pc-freebsd13 && \
+  make -j4 && make install && \
+  cd /tmp && rm -rf /tmp/*
+# Compile MPC
+RUN cd /tmp && \
+  wget https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz && tar -xf mpc-1.2.1.tar.gz && \
+  cd mpc-1.2.1 && \
+  ./configure --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --with-gnu-ld --enable-static \
+  --enable-shared --with-gmp=/usr/x86_64-pc-freebsd13 \
+  --with-mpfr=/usr/x86_64-pc-freebsd13 --host=x86_64-pc-freebsd13 && \
+  make -j4 && make install && \
+  cd /tmp && rm -rf /tmp/*
+# Compile GCC
+RUN cd /tmp && \
+  wget https://ftp.gnu.org/gnu/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz && \
+  tar xf gcc-11.1.0.tar.xz && \
+  cd gcc-11.1.0 && mkdir build && cd build && \
+  ../configure --without-headers --with-gnu-as --with-gnu-ld --disable-nls \
+  --enable-languages=c,c++ --enable-libssp --enable-gold --enable-ld \
+  --disable-libitm --disable-libquadmath --disable-multilib --target=x86_64-pc-freebsd13 \
+  --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --with-gmp=/usr/x86_64-pc-freebsd13 \
+  --with-mpc=/usr/x86_64-pc-freebsd13 --with-mpfr=/usr/x86_64-pc-freebsd13 --disable-libgomp \
+  --with-sysroot=/usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13 \
+  --with-build-sysroot=/usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13 && \
+  cd /tmp/gcc-11.1.0 && \
+  cd /tmp/gcc-11.1.0/build && \
+  LD_LIBRARY_PATH=/usr/x86_64-pc-freebsd13/lib make -j4 && make install && \
+  cd /tmp && rm -rf /tmp/*
 
-# Install OSx cross-tools
-#Build arguments
-ARG osxcross_repo="tpoechtrager/osxcross"
-ARG osxcross_revision="542acc2ef6c21aeb3f109c03748b1015a71fed63"
-ARG darwin_sdk_version="10.10"
-ARG darwin_osx_version_min="10.6"
-ARG darwin_version="14"
-ARG darwin_sdk_url="https://www.dropbox.com/s/yfbesd249w10lpc/MacOSX${darwin_sdk_version}.sdk.tar.xz"
-
-# ENV available in docker image
-ENV OSXCROSS_REPO="${osxcross_repo}"                   \
-    OSXCROSS_REVISION="${osxcross_revision}"           \
-    DARWIN_SDK_VERSION="${darwin_sdk_version}"         \
-    DARWIN_VERSION="${darwin_version}"                 \
-    DARWIN_OSX_VERSION_MIN="${darwin_osx_version_min}" \
-    DARWIN_SDK_URL="${darwin_sdk_url}"
-
-RUN mkdir -p "/tmp/osxcross"                                                                                   \
- && cd "/tmp/osxcross"                                                                                         \
- && curl -sLo osxcross.tar.gz "https://codeload.github.com/${OSXCROSS_REPO}/tar.gz/${OSXCROSS_REVISION}"  \
- && tar --strip=1 -xzf osxcross.tar.gz                                                                         \
- && rm -f osxcross.tar.gz                                                                                      \
- && curl -sLo tarballs/MacOSX${DARWIN_SDK_VERSION}.sdk.tar.xz                                                  \
-             "${DARWIN_SDK_URL}"                \
- && yes "" | SDK_VERSION="${DARWIN_SDK_VERSION}" OSX_VERSION_MIN="${DARWIN_OSX_VERSION_MIN}" ./build.sh                               \
- && mv target /usr/osxcross                                                                                    \
- && mv tools /usr/osxcross/                                                                                    \
- && ln -sf ../tools/osxcross-macports /usr/osxcross/bin/omp                                                    \
- && ln -sf ../tools/osxcross-macports /usr/osxcross/bin/osxcross-macports                                      \
- && ln -sf ../tools/osxcross-macports /usr/osxcross/bin/osxcross-mp                                            \
- && sed -i -e "s%exec cmake%exec /usr/bin/cmake%" /usr/osxcross/bin/osxcross-cmake                             \
- && rm -rf /tmp/osxcross                                                                                       \
- && rm -rf "/usr/osxcross/SDK/MacOSX${DARWIN_SDK_VERSION}.sdk/usr/share/man"
-
-# Create symlinks for triples and set default CROSS_TRIPLE
-ENV LINUX_TRIPLES=arm-linux-gnueabi,arm-linux-gnueabihf,aarch64-linux-gnu,mipsel-linux-gnu,powerpc64le-linux-gnu                  \
-    DARWIN_TRIPLES=x86_64h-apple-darwin${DARWIN_VERSION},x86_64-apple-darwin${DARWIN_VERSION},i386-apple-darwin${DARWIN_VERSION}  \
-    WINDOWS_TRIPLES=i686-w64-mingw32,x86_64-w64-mingw32                                                                           \
-    CROSS_TRIPLE=x86_64-linux-gnu
-COPY ./assets/osxcross-wrapper /usr/bin/osxcross-wrapper
-RUN mkdir -p /usr/x86_64-linux-gnu;                                                               \
-    for triple in $(echo ${LINUX_TRIPLES} | tr "," " "); do                                       \
+ARG LINUX_TRIPLES="arm-linux-gnueabihf,aarch64-linux-gnu"
+ARG FREEBSD_TRIPLES="x86_64-pc-freebsd13"
+# Create symlinks for triples
+RUN for triple in $(echo ${LINUX_TRIPLES} | tr "," " "); do                                       \
       for bin in /usr/bin/$triple-*; do                                                           \
         if [ ! -f /usr/$triple/bin/$(basename $bin | sed "s/$triple-//") ]; then                  \
           ln -s $bin /usr/$triple/bin/$(basename $bin | sed "s/$triple-//");                      \
@@ -106,44 +113,24 @@ RUN mkdir -p /usr/x86_64-linux-gnu;                                             
         fi;                                                                                       \
       done;                                                                                       \
     done &&                                                                                       \
-    for triple in $(echo ${DARWIN_TRIPLES} | tr "," " "); do                                      \
+    for triple in $(echo ${FREEBSD_TRIPLES} | tr "," " "); do                                     \
       mkdir -p /usr/$triple/bin;                                                                  \
-      for bin in /usr/osxcross/bin/$triple-*; do                                                  \
-        ln /usr/bin/osxcross-wrapper /usr/$triple/bin/$(basename $bin | sed "s/$triple-//");      \
-      done &&                                                                                     \
-      rm -f /usr/$triple/bin/clang*;                                                              \
-      ln -s cc /usr/$triple/bin/gcc;                                                              \
-      ln -s /usr/osxcross/SDK/MacOSX${DARWIN_SDK_VERSION}.sdk/usr /usr/x86_64-linux-gnu/$triple;  \
-    done;                                                                                         \
-    for triple in $(echo ${WINDOWS_TRIPLES} | tr "," " "); do                                     \
-      mkdir -p /usr/$triple/bin;                                                                  \
-      for bin in /etc/alternatives/$triple-* /usr/bin/$triple-*; do                               \
+      for bin in /usr/bin/$triple-*; do                                                           \
         if [ ! -f /usr/$triple/bin/$(basename $bin | sed "s/$triple-//") ]; then                  \
           ln -s $bin /usr/$triple/bin/$(basename $bin | sed "s/$triple-//");                      \
         fi;                                                                                       \
       done;                                                                                       \
       ln -s gcc /usr/$triple/bin/cc;                                                              \
-      ln -s /usr/$triple /usr/x86_64-linux-gnu/$triple;                                           \
     done
-# we need to use default clang binary to avoid a bug in osxcross that recursively call himself
-# with more and more parameters
-
-ENV LD_LIBRARY_PATH /usr/osxcross/lib:$LD_LIBRARY_PATH
 
 ARG GO_VERSION="1.17.1"
-
-ENV GOROOT="/usr/local/go" \
-    PATH="/root/go/bin:/usr/local/go/bin:$PATH" \
-    CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
-    CGO_LDFLAGS="-Wl,-z,relro,-z,now"
-
 # Install Golang and gox
-RUN cd /tmp; \
-    wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz; \
-    tar -xvf go${GO_VERSION}.linux-amd64.tar.gz; \
-    mv go /usr/local/; \
-    go install github.com/authelia/gox@latest; \
-    rm -rf /tmp/*
+RUN cd /tmp && \
+  wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
+  tar -xvf go${GO_VERSION}.linux-amd64.tar.gz && \
+  mv go /usr/local/ && \
+  go install github.com/authelia/gox@latest && \
+  rm -rf /tmp/*
 
 # Image metadata
 ENTRYPOINT ["/usr/bin/crossbuild"]
