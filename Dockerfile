@@ -1,8 +1,9 @@
-FROM buildpack-deps:bullseye-curl
+FROM buildpack-deps:stretch-curl
 LABEL maintainer="Nightah"
 
 ENV CROSS_TRIPLE="x86_64-linux-gnu" \
     PATH="/root/go/bin:/usr/local/go/bin:$PATH" \
+    LD_LIBRARY_PATH="/usr/x86_64-pc-freebsd13/lib:$LD_LIBRARY_PATH" \
     GOROOT="/usr/local/go" \
     CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
     CGO_LDFLAGS="-Wl,-z,relro,-z,now"
@@ -95,7 +96,7 @@ RUN cd /tmp && \
   --with-build-sysroot=/usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13 && \
   cd /tmp/gcc-11.1.0 && \
   cd /tmp/gcc-11.1.0/build && \
-  LD_LIBRARY_PATH=/usr/x86_64-pc-freebsd13/lib make -j4 && make install && \
+  make -j4 && make install && \
   cd /tmp && rm -rf /tmp/*
 
 ARG LINUX_TRIPLES="arm-linux-gnueabihf,aarch64-linux-gnu"
