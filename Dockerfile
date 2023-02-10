@@ -34,13 +34,28 @@ RUN set -x; echo "Starting image build for Debian Bullseye" \
         libssl-dev                                     \
  && apt-get clean
 
+# Latest is 13.1
 ARG FREEBSD_VERSION="13.0"
+
+# Latest is 2.40
+ARG BINUTILS_VERSION="2.37"
+
+ARG GMP_VERSION="6.2.1"
+
+# Latest is 4.2.0
+ARG MPFR_VERSION="4.1.0"
+
+# Latest is 1.3.1
+ARG MPC_VERSION="1.2.1"
+
+# Latest is 12.2.0
+ARG GCC_VERSION="11.1.0"
 # Install FreeBSD cross-tools
 # Compile binutils
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.gz && \
-  tar xf binutils-2.37.tar.gz && \
-  cd binutils-2.37 && \
+  wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz && \
+  tar xf binutils-${BINUTILS_VERSION}.tar.gz && \
+  cd binutils-${BINUTILS_VERSION} && \
   ./configure --enable-libssp --enable-gold --enable-ld \
   --target=x86_64-pc-freebsd13 --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin && \
   make -j4 && \
@@ -58,25 +73,25 @@ RUN cd /tmp && \
   cd /tmp && rm -rf /tmp/*
 # Compile GMP
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz && \
-  tar -xf gmp-6.2.1.tar.xz && \
-  cd gmp-6.2.1 && \
+  wget https://ftp.gnu.org/gnu/gmp/gmp-${GMP_VERSION}.tar.xz && \
+  tar -xf gmp-${GMP_VERSION}.tar.xz && \
+  cd gmp-${GMP_VERSION} && \
   ./configure --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --enable-shared --enable-static \
   --enable-fft --enable-cxx --host=x86_64-pc-freebsd13 && \
   make -j4 && make install && \
   cd /tmp && rm -rf /tmp/*
 # Compile MPFR
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.0.tar.xz && tar -xf mpfr-4.1.0.tar.xz && \
-  cd mpfr-4.1.0 && \
+  wget https://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VERSION}.tar.xz && tar -xf mpfr-${MPFR_VERSION}.tar.xz && \
+  cd mpfr-${MPFR_VERSION} && \
   ./configure --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --with-gnu-ld--enable-static \
   --enable-shared --with-gmp=/usr/x86_64-pc-freebsd13 --host=x86_64-pc-freebsd13 && \
   make -j4 && make install && \
   cd /tmp && rm -rf /tmp/*
 # Compile MPC
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz && tar -xf mpc-1.2.1.tar.gz && \
-  cd mpc-1.2.1 && \
+  wget https://ftp.gnu.org/gnu/mpc/mpc-${MPC_VERSION}.tar.gz && tar -xf mpc-${MPC_VERSION}.tar.gz && \
+  cd mpc-${MPC_VERSION} && \
   ./configure --prefix=/usr/x86_64-pc-freebsd13 --bindir=/usr/bin --with-gnu-ld --enable-static \
   --enable-shared --with-gmp=/usr/x86_64-pc-freebsd13 \
   --with-mpfr=/usr/x86_64-pc-freebsd13 --host=x86_64-pc-freebsd13 && \
@@ -84,9 +99,9 @@ RUN cd /tmp && \
   cd /tmp && rm -rf /tmp/*
 # Compile GCC
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz && \
-  tar xf gcc-11.1.0.tar.xz && \
-  cd gcc-11.1.0 && mkdir build && cd build && \
+  wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
+  tar xf gcc-${GCC_VERSION}.tar.xz && \
+  cd gcc-${GCC_VERSION} && mkdir build && cd build && \
   ../configure --without-headers --with-gnu-as --with-gnu-ld --disable-nls \
   --enable-languages=c,c++ --enable-libssp --enable-gold --enable-ld \
   --disable-libitm --disable-libquadmath --disable-multilib --target=x86_64-pc-freebsd13 \
@@ -94,8 +109,8 @@ RUN cd /tmp && \
   --with-mpc=/usr/x86_64-pc-freebsd13 --with-mpfr=/usr/x86_64-pc-freebsd13 --disable-libgomp \
   --with-sysroot=/usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13 \
   --with-build-sysroot=/usr/x86_64-pc-freebsd13/x86_64-pc-freebsd13 && \
-  cd /tmp/gcc-11.1.0 && \
-  cd /tmp/gcc-11.1.0/build && \
+  cd /tmp/gcc-${GCC_VERSION} && \
+  cd /tmp/gcc-${GCC_VERSION}/build && \
   make -j4 && make install && \
   cd /tmp && rm -rf /tmp/*
 
