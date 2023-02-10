@@ -48,7 +48,7 @@ ARG MPFR_VERSION="4.1.0"
 # Latest is 1.3.1
 ARG MPC_VERSION="1.2.1"
 
-# Latest is 12.2.0
+# Latest is 11.3.0 / 12.2.0
 ARG GCC_VERSION="11.1.0"
 # Install FreeBSD cross-tools
 # Compile binutils
