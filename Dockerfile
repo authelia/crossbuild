@@ -139,7 +139,7 @@ RUN for triple in $(echo ${LINUX_TRIPLES} | tr "," " "); do                     
       ln -s gcc /usr/$triple/bin/cc;                                                              \
     done
 
-ARG GO_VERSION="1.20.1"
+ARG GO_VERSION="1.20.3"
 # Install Golang and gox
 RUN cd /tmp && \
   wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
