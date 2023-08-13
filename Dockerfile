@@ -148,6 +148,7 @@ RUN cd /tmp && \
   tar -xvf go${GO_VERSION}.linux-amd64.tar.gz && \
   mv go /usr/local/ && \
   go install github.com/authelia/gox@latest && \
+  git config --global --add safe.directory /workdir && \
   rm -rf /tmp/*
 
 # Image metadata
