@@ -1,4 +1,4 @@
-FROM buildpack-deps:stretch-curl
+FROM buildpack-deps:bookworm-curl
 LABEL maintainer="Nightah"
 
 ENV CROSS_TRIPLE="x86_64-linux-gnu" \
@@ -9,7 +9,7 @@ ENV CROSS_TRIPLE="x86_64-linux-gnu" \
     CGO_LDFLAGS="-Wl,-z,relro,-z,now"
 
 # Install deps
-RUN set -x; echo "Starting image build for Debian Bullseye" \
+RUN set -x; echo "Starting image build for Debian Bookworm" \
  && dpkg --add-architecture arm64                      \
  && dpkg --add-architecture armhf                      \
  && apt-get update                                     \
