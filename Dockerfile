@@ -34,22 +34,24 @@ RUN set -x; echo "Starting image build for Debian Bookworm" \
         libssl-dev                                     \
  && apt-get clean
 
-# Latest is 13.1
-ARG FREEBSD_VERSION="13.0"
+# Latest is 13.2
+ARG FREEBSD_VERSION="13.2"
 
-# Latest is 2.40
-ARG BINUTILS_VERSION="2.37"
+# Latest is 2.41
+ARG BINUTILS_VERSION="2.41"
 
-ARG GMP_VERSION="6.2.1"
+# Latest is 6.30
+ARG GMP_VERSION="6.3.0"
 
 # Latest is 4.2.0
-ARG MPFR_VERSION="4.1.0"
+ARG MPFR_VERSION="4.2.0"
 
 # Latest is 1.3.1
-ARG MPC_VERSION="1.2.1"
+ARG MPC_VERSION="1.3.1"
 
-# Latest is 11.3.0 / 12.2.0
-ARG GCC_VERSION="11.1.0"
+# Latest is 11.4.0 / 12.3.0 / 13.2.0
+ARG GCC_VERSION="13.2.0"
+
 # Install FreeBSD cross-tools
 # Compile binutils
 RUN cd /tmp && \
@@ -139,7 +141,7 @@ RUN for triple in $(echo ${LINUX_TRIPLES} | tr "," " "); do                     
       ln -s gcc /usr/$triple/bin/cc;                                                              \
     done
 
-ARG GO_VERSION="1.21.1"
+ARG GO_VERSION="1.21.0"
 # Install Golang and gox
 RUN cd /tmp && \
   wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
