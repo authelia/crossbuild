@@ -1,4 +1,4 @@
-FROM buildpack-deps:bookworm-curl
+FROM buildpack-deps:oldstable-curl
 LABEL maintainer="Nightah"
 
 ENV CROSS_TRIPLE="x86_64-linux-gnu" \
@@ -9,7 +9,7 @@ ENV CROSS_TRIPLE="x86_64-linux-gnu" \
     CGO_LDFLAGS="-Wl,-z,relro,-z,now"
 
 # Install deps
-RUN set -x; echo "Starting image build for Debian Bookworm" \
+RUN set -x; echo "Starting image build for Debian oldstable" \
  && dpkg --add-architecture arm64                      \
  && dpkg --add-architecture armhf                      \
  && apt-get update                                     \
