@@ -6,12 +6,12 @@ You can use this image to produce binaries for multiple architectures.
 
 ## Supported targets
 
-Triple                 | Aliases                             | linux | freebsd |
------------------------|-------------------------------------|-------|---------|
-x86_64-linux-gnu       | **(default)**, linux, amd64, x86_64 |   ✔   |         |
-arm-linux-gnueabihf    | armhf, armv7, armv7l                |   ✔   |         |
-aarch64-linux-gnu      | arm64, aarch64                      |   ✔   |         |
-x86_64-pc-freebsd13    | freebsd                             |       |    ✔    |
+| Triple               | Aliases                             | linux | freebsd |
+|----------------------|-------------------------------------|-------|---------|
+| x86_64-linux-gnu     | **(default)**, linux, amd64, x86_64 | ✔     |         |
+| arm-linux-gnueabihf  | armhf, armv7, armv7l                | ✔     |         |
+| aarch64-linux-gnu    | arm64, aarch64                      | ✔     |         |
+|  x86_64-pc-freebsd14 | freebsd                             |       |    ✔    |
 
 ## Using crossbuild
 
@@ -45,7 +45,7 @@ $ docker run --rm -v $(pwd):/workdir -e CROSS_TRIPLE=aarch64-linux-gnu authelia/
 #### freebsd x86_64
 
 ```console
-$ docker run -it --rm -v $(pwd):/workdir -e CROSS_TRIPLE=x86_64-pc-freebsd13  authelia/crossbuild make helloworld
+$ docker run -it --rm -v $(pwd):/workdir -e CROSS_TRIPLE=x86_64-pc-freebsd14  authelia/crossbuild make helloworld
 ```
 
 ## Credit
