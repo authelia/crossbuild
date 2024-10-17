@@ -8,7 +8,7 @@ cat << EOF
 steps:
   - label: ":docker: Build and Deploy"
     commands:
-      - "docker build --tag ${REPOSITORY}:${TAG} --pull --push ."
+      - "docker build --tag ${REPOSITORY}:${TAG} --provenance mode=max,reproducible=true --sbom true --builder buildx --progress plain --pull --push ."
     concurrency: 1
     concurrency_group: "crossbuild-deployments"
     agents:
