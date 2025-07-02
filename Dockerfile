@@ -34,29 +34,25 @@ RUN set -x; echo "Starting image build for Debian oldstable" \
         libssl-dev                                     \
  && apt-get clean
 
-# Latest is 14.1
-ARG FREEBSD_VERSION="14.1"
+ARG GNU_MIRROR="https://mirrors.middlendian.com/gnu"
+
+ARG FREEBSD_VERSION="14.3"
 ARG FREEBSD_PREFIX="x86_64-pc-freebsd14"
 
-# Latest is 2.43
-ARG BINUTILS_VERSION="2.43"
+ARG BINUTILS_VERSION="2.44"
 
-# Latest is 6.30
 ARG GMP_VERSION="6.3.0"
 
-# Latest is 4.2.1
-ARG MPFR_VERSION="4.2.1"
+ARG MPFR_VERSION="4.2.2"
 
-# Latest is 1.3.1
 ARG MPC_VERSION="1.3.1"
 
-# Latest is 11.5.0 / 12.4.0 / 13.3.0 / 14.2.0
-ARG GCC_VERSION="14.2.0"
+ARG GCC_VERSION="15.1.0"
 
 # Install FreeBSD cross-tools
 # Compile binutils
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz && \
+  wget ${GNU_MIRROR}/binutils/binutils-${BINUTILS_VERSION}.tar.gz && \
   tar xf binutils-${BINUTILS_VERSION}.tar.gz && \
   cd binutils-${BINUTILS_VERSION} && \
   ./configure --enable-libssp --enable-gold --enable-ld \
@@ -76,7 +72,7 @@ RUN cd /tmp && \
   cd /tmp && rm -rf /tmp/*
 # Compile GMP
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/gmp/gmp-${GMP_VERSION}.tar.xz && \
+  wget ${GNU_MIRROR}/gmp/gmp-${GMP_VERSION}.tar.xz && \
   tar -xf gmp-${GMP_VERSION}.tar.xz && \
   cd gmp-${GMP_VERSION} && \
   ./configure --prefix=/usr/${FREEBSD_PREFIX} --bindir=/usr/bin --enable-shared --enable-static \
@@ -85,7 +81,7 @@ RUN cd /tmp && \
   cd /tmp && rm -rf /tmp/*
 # Compile MPFR
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VERSION}.tar.xz && tar -xf mpfr-${MPFR_VERSION}.tar.xz && \
+  wget ${GNU_MIRROR}/mpfr/mpfr-${MPFR_VERSION}.tar.xz && tar -xf mpfr-${MPFR_VERSION}.tar.xz && \
   cd mpfr-${MPFR_VERSION} && \
   ./configure --prefix=/usr/${FREEBSD_PREFIX} --bindir=/usr/bin --with-gnu-ld--enable-static \
   --enable-shared --with-gmp=/usr/${FREEBSD_PREFIX} --host=${FREEBSD_PREFIX} && \
@@ -93,7 +89,7 @@ RUN cd /tmp && \
   cd /tmp && rm -rf /tmp/*
 # Compile MPC
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/mpc/mpc-${MPC_VERSION}.tar.gz && tar -xf mpc-${MPC_VERSION}.tar.gz && \
+  wget ${GNU_MIRROR}/mpc/mpc-${MPC_VERSION}.tar.gz && tar -xf mpc-${MPC_VERSION}.tar.gz && \
   cd mpc-${MPC_VERSION} && \
   ./configure --prefix=/usr/${FREEBSD_PREFIX} --bindir=/usr/bin --with-gnu-ld --enable-static \
   --enable-shared --with-gmp=/usr/${FREEBSD_PREFIX} \
@@ -102,7 +98,7 @@ RUN cd /tmp && \
   cd /tmp && rm -rf /tmp/*
 # Compile GCC
 RUN cd /tmp && \
-  wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
+  wget ${GNU_MIRROR}/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
   tar xf gcc-${GCC_VERSION}.tar.xz && \
   cd gcc-${GCC_VERSION} && mkdir build && cd build && \
   ../configure --without-headers --with-gnu-as --with-gnu-ld --disable-nls \
@@ -141,7 +137,7 @@ RUN for triple in $(echo ${LINUX_TRIPLES} | tr "," " "); do                     
       ln -s gcc /usr/$triple/bin/cc;                                                              \
     done
 
-ARG GO_VERSION="1.23.1"
+ARG GO_VERSION="1.24.4"
 # Install Golang and gox
 RUN cd /tmp && \
   wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
