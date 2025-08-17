@@ -49,7 +49,7 @@ RUN <<EOF
   for triple in $(echo ${MUSL_TRIPLES} | tr "," " "); do
     make TARGET=${triple} OUTPUT=/usr GCC_VER=${GCC_VERSION} LINUX_VER=${LINUX_VERSION} install
   done
-  cd tmp && rm -rf /tmp/*
+  cd /tmp && rm -rf /tmp/*
 EOF
 
 ARG GNU_MIRROR="https://mirrors.middlendian.com/gnu"
