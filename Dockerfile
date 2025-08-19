@@ -1,5 +1,6 @@
 FROM buildpack-deps:oldstable-curl
 LABEL org.opencontainers.image.authors="Authelia Team <team@authelia.com>"
+LABEL org.authelia.image.prune.protection="true"
 
 ENV \
   CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -fstack-protector-strong" \
@@ -168,7 +169,6 @@ RUN <<EOF
   wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz
   tar -xvf go${GO_VERSION}.linux-amd64.tar.gz
   mv go /usr/local/
-  go install github.com/authelia/gox@latest
   git config --global --add safe.directory /workdir
   rm -rf /tmp/*
 EOF
