@@ -6,12 +6,12 @@ You can use this image to produce binaries for multiple architectures.
 
 ## Supported targets
 
-| Triple               | Aliases                             | linux | freebsd |
-|----------------------|-------------------------------------|-------|---------|
-| x86_64-linux-gnu     | **(default)**, linux, amd64, x86_64 | ✔     |         |
-| arm-linux-gnueabihf  | armhf, armv7, armv7l                | ✔     |         |
-| aarch64-linux-gnu    | arm64, aarch64                      | ✔     |         |
-|  x86_64-pc-freebsd14 | freebsd                             |       |    ✔    |
+| Triple                                        | Aliases                             | linux   | freebsd |
+|-----------------------------------------------|-------------------------------------|---------|---------|
+| x86_64-linux-gnu, x86_64-linux-musl           | **(default)**, linux, amd64, x86_64 | ✔       |         |
+| arm-linux-gnueabihf, arm-linux-musleabihf     | armhf, armv7, armv7l                | ✔       |         |
+| aarch64-linux-gnu, aarch64-linux-musl         | arm64, aarch64                      | ✔       |         |
+| x86_64-pc-freebsd14                           | freebsd                             |         | ✔       |
 
 ## Using crossbuild
 
