@@ -7,8 +7,8 @@ ENV \
   CGO_LDFLAGS="-Wl,-z,relro,-z,now" \
   CROSS_TRIPLE="x86_64-linux-gnu" \
   GOROOT="/usr/local/go" \
-  LD_LIBRARY_PATH="/usr/x86_64-pc-freebsd14/lib:$LD_LIBRARY_PATH" \
-  PATH="/root/go/bin:/usr/local/go/bin:$PATH"
+  LD_LIBRARY_PATH="/usr/x86_64-pc-freebsd14/lib:${LD_LIBRARY_PATH}" \
+  PATH="/usr/local/go/bin:${PATH}"
 
 RUN <<EOF
   echo "Starting image build for Debian oldstable"
@@ -28,7 +28,6 @@ RUN <<EOF
     crossbuild-essential-armhf \
     curl \
     git-core \
-    goreleaser \
     libssl-dev \
     libxml2-dev \
     lzma-dev \
@@ -37,6 +36,7 @@ RUN <<EOF
     wget \
     xz-utils
   apt-get -y clean
+  git config --global --add safe.directory /workdir
 EOF
 
 ARG GCC_VERSION="15.1.0"
@@ -160,17 +160,6 @@ RUN <<EOF
     done
     ln -s gcc /usr/$triple/bin/cc
   done
-EOF
-
-ARG GO_VERSION="1.25.0"
-
-RUN <<EOF
-  cd /tmp
-  wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz
-  tar -xvf go${GO_VERSION}.linux-amd64.tar.gz
-  mv go /usr/local/
-  git config --global --add safe.directory /workdir
-  rm -rf /tmp/*
 EOF
 
 COPY --link ./assets/crossbuild /usr/bin/crossbuild
