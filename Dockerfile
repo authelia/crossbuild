@@ -32,6 +32,7 @@ RUN <<EOF
     libxml2-dev \
     lzma-dev \
     multistrap \
+    musl \
     openssl \
     wget \
     xz-utils
