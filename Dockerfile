@@ -1,4 +1,4 @@
-FROM buildpack-deps:oldstable-curl
+FROM buildpack-deps:oldoldstable-curl
 LABEL org.opencontainers.image.authors="Authelia Team <team@authelia.com>"
 LABEL org.authelia.image.prune.protection="true"
 
