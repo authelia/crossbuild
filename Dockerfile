@@ -54,7 +54,7 @@ RUN <<EOF
   cd /tmp && rm -rf /tmp/*
 EOF
 
-ARG GNU_MIRROR="https://mirrors.middlendian.com/gnu"
+ARG GNU_MIRROR="https://mirror.aarnet.edu.au/gnu"
 ARG FREEBSD_VERSION="14.4"
 ARG FREEBSD_PREFIX="x86_64-pc-freebsd14"
 ARG BINUTILS_VERSION="2.44"
