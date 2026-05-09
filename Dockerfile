@@ -11,6 +11,7 @@ ENV \
   PATH="/usr/local/go/bin:${PATH}"
 
 RUN <<EOF
+  set -e
   echo "Starting image build for Debian oldstable"
   echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' > /etc/apt/sources.list.d/goreleaser.list
   dpkg --add-architecture arm64
@@ -40,21 +41,22 @@ RUN <<EOF
   git config --global --add safe.directory /workdir
 EOF
 
+ARG GNU_MIRROR="https://mirror.aarnet.edu.au/gnu"
 ARG GCC_VERSION="15.1.0"
 ARG LINUX_VERSION="5.8.5"
 ARG MUSL_TRIPLES="x86_64-linux-musl,aarch64-linux-musl,arm-linux-musleabihf"
 
 RUN <<EOF
+  set -e
   cd /tmp
   git clone https://github.com/richfelker/musl-cross-make
   cd musl-cross-make
   for triple in $(echo ${MUSL_TRIPLES} | tr "," " "); do
-    make TARGET=${triple} OUTPUT=/usr GCC_VER=${GCC_VERSION} LINUX_VER=${LINUX_VERSION} install
+    make TARGET=${triple} OUTPUT=/usr GCC_VER=${GCC_VERSION} LINUX_VER=${LINUX_VERSION} GNU_SITE=${GNU_MIRROR} install
   done
   cd /tmp && rm -rf /tmp/*
 EOF
 
-ARG GNU_MIRROR="https://mirror.aarnet.edu.au/gnu"
 ARG FREEBSD_VERSION="14.4"
 ARG FREEBSD_PREFIX="x86_64-pc-freebsd14"
 ARG BINUTILS_VERSION="2.44"
@@ -63,6 +65,7 @@ ARG MPFR_VERSION="4.2.2"
 ARG MPC_VERSION="1.3.1"
 
 RUN <<EOF
+  set -e
   cd /tmp
   wget ${GNU_MIRROR}/binutils/binutils-${BINUTILS_VERSION}.tar.gz
   tar xf binutils-${BINUTILS_VERSION}.tar.gz
@@ -75,6 +78,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+  set -e
   cd /tmp
   wget https://mirror.aarnet.edu.au/pub/FreeBSD/releases/amd64/${FREEBSD_VERSION}-RELEASE/base.txz
   cd /usr/${FREEBSD_PREFIX}/${FREEBSD_PREFIX}
@@ -87,6 +91,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+  set -e
   cd /tmp
   wget ${GNU_MIRROR}/gmp/gmp-${GMP_VERSION}.tar.xz
   tar -xf gmp-${GMP_VERSION}.tar.xz
@@ -98,6 +103,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+  set -e
   cd /tmp
   wget ${GNU_MIRROR}/mpfr/mpfr-${MPFR_VERSION}.tar.xz && tar -xf mpfr-${MPFR_VERSION}.tar.xz
   cd mpfr-${MPFR_VERSION}
@@ -108,6 +114,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+  set -e
   cd /tmp
   wget ${GNU_MIRROR}/mpc/mpc-${MPC_VERSION}.tar.gz && tar -xf mpc-${MPC_VERSION}.tar.gz
   cd mpc-${MPC_VERSION}
@@ -119,6 +126,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+  set -e
   cd /tmp
   wget ${GNU_MIRROR}/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz
   tar xf gcc-${GCC_VERSION}.tar.xz
@@ -140,6 +148,7 @@ EOF
 ARG GLIBC_TRIPLES="arm-linux-gnueabihf,aarch64-linux-gnu"
 
 RUN <<EOF
+  set -e
   for triple in $(echo ${GLIBC_TRIPLES} | tr "," " "); do
     for bin in /usr/bin/$triple-*; do
       if [ ! -f /usr/$triple/bin/$(basename $bin | sed "s/$triple-//") ]; then
