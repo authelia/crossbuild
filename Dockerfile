@@ -35,6 +35,7 @@ RUN <<EOF
     multistrap \
     musl \
     openssl \
+    rsync \
     wget \
     xz-utils
   apt-get -y clean
